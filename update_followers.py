@@ -1,29 +1,39 @@
-import requests
-import json
-from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-INSTAGRAM_USERNAME = "lifeatsendcloud"
-URL = f"https://www.ninjalitics.com/{INSTAGRAM_USERNAME}"
+USERNAME = "lifeatsendcloud"
 
 def get_followers():
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
-    response = requests.get(URL, headers=headers)
-    
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, "html.parser")
-        follower_count = soup.find("span", class_="follower_count")  # Adjust based on Ninjalitics HTML
-        if follower_count:
-            return int(follower_count.text.replace(",", ""))
-    
-    return None
+    chrome_options = Options()
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--headless")
+    # Remove --headless for debugging
+    # chrome_options.add_argument("--headless")
+
+    service = Service("chromedriver.exe")  # Path to chromedriver
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+
+    url = f"https://www.instagram.com/{USERNAME}/"
+    driver.get(url)
+
+    try:
+        followers_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//meta[@property='og:description']"))
+        )
+        followers_text = followers_element.get_attribute("content")
+        followers = followers_text.split(" Followers")[0].replace(",", "")
+        
+        print(f"Followers: {followers}")
+        return followers
+    except Exception as e:
+        print("Could not find followers count:", e)
+        return None
+    finally:
+        driver.quit()
 
 followers = get_followers()
-
-if followers:
-    with open("followers.json", "w") as f:
-        json.dump({"number": followers}, f)
-    print("Updated followers count:", followers)
-else:
-    print("Failed to get followers")

@@ -7,7 +7,8 @@ on:
 
 jobs:
   update_followers:
-    runs-on: ubuntu-latest  # Use Linux runner
+    runs-on: ubuntu-latest  # GitHub uses Ubuntu
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -22,8 +23,8 @@ jobs:
           wget "https://storage.googleapis.com/chrome-for-testing-public/134.0.6998.88/linux64/chromedriver-linux64.zip"
           unzip chromedriver-linux64.zip
           cd chromedriver-linux64
-          sudo mv chromedriver /usr/local/bin/chromedriver
-          sudo chmod +x /usr/local/bin/chromedriver
+          sudo mv chromedriver /usr/bin/chromedriver
+          sudo chmod +x /usr/bin/chromedriver
 
       - name: Setup Python
         uses: actions/setup-python@v3
@@ -31,7 +32,7 @@ jobs:
           python-version: "3.x"
 
       - name: Install Dependencies
-        run: pip install selenium
+        run: pip install -r requirements.txt
 
       - name: Run Python Script
         run: python update_followers.py

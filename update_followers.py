@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import os
+import time
 
 USERNAME = "lifeatsendcloud"
 
@@ -12,28 +13,30 @@ def get_followers():
     chrome_options = Options()
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--headless")  # Run headless in GitHub Actions
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("window-size=1920,1080")  # Ensure full page loads
 
     # Use different ChromeDriver paths based on the environment
-    if os.name == "nt":  # Windows
-        service = Service("chromedriver.exe")  
-    else:  # Linux (GitHub Actions)
-        service = Service("/usr/bin/chromedriver")
+    driver_path = "chromedriver.exe" if os.name == "nt" else "/usr/bin/chromedriver"
+    service = Service(driver_path)
 
     driver = webdriver.Chrome(service=service, options=chrome_options)
+
     url = f"https://www.instagram.com/{USERNAME}/"
     driver.get(url)
 
     try:
-        followers_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//meta[@property='og:description']"))
-        )
-        followers_text = followers_element.get_attribute("content")
-        followers = followers_text.split(" Followers")[0].replace(",", "")
+        time.sleep(5)  # Wait for dynamic content
 
+        # Use a more reliable XPath to locate the followers count
+        followers_element = WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.XPATH, "//span[contains(@class, '_ac2a')]"))
+        )
+
+        followers = followers_element.text.replace(",", "").split()[0]
         print(f"Followers: {followers}")
 
-        # Save followers count to a JSON file
+        # Save followers count
         with open("followers.json", "w") as file:
             file.write(f'{{"number": {followers}}}')
 

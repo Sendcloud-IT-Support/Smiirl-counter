@@ -11,10 +11,11 @@ def get_followers():
     chrome_options.add_argument("--headless")  # Run in headless mode
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
 
-    # Use installed ChromeDriver
-    service = Service("/usr/bin/chromedriver")  
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+      # Automatically download the correct ChromeDriver
+    driver = webdriver.Chrome(options=chrome_options)
 
     url = f"https://www.instagram.com/{USERNAME}/"
     driver.get(url)
@@ -22,13 +23,15 @@ def get_followers():
     time.sleep(5)  # Wait for page to load
 
     try:
-        followers_element = driver.find_element(By.XPATH, "//span[contains(@class, 'x1lliihq')]")
-        followers = followers_element.text
+        followers_element = driver.find_element(By.XPATH, "//meta[@property='og:description']")
+        followers_text = followers_element.get_attribute("content")
+        followers = followers_text.split(" ")[0].replace(",", "")  # Extract number
+
         print(f"Followers: {followers}")
 
         # Save to JSON
         with open("followers.json", "w") as file:
-            file.write(f'{{"number": {followers}}}')
+            json.dump({"number": followers}, file)
 
         return followers
     except Exception as e:

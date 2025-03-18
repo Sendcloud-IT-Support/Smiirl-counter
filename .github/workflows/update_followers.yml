@@ -2,42 +2,45 @@ name: Update Instagram Followers
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # Runs daily at 12:00 UTC
-  workflow_dispatch:  # Allows manual trigger
-
-env:
-  CHROMEDRIVER_PATH: "chromedriver.exe"
-  USERNAME: "lifeatsendcloud"
+    - cron: "*/10 * * * *"  # Runs every 10 minutes
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
-  fetch-followers:
-    runs-on: ubuntu-latest
+  update_followers:
+    runs-on: ubuntu-latest  # Use Linux runner
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Install ChromeDriver
+        run: |
+          CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
+          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
+          wget "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/bin/chromedriver
+          sudo chmod +x /usr/bin/chromedriver
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
         with:
-          python-version: '3.11'
+          python-version: "3.x"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install selenium
+      - name: Install Dependencies
+        run: pip install selenium
 
-      - name: Download ChromeDriver
-        run: |
-          sudo apt update
-          sudo apt install -y chromium-chromedriver
-
-      - name: Run script to fetch followers
+      - name: Run Python Script
         run: python update_followers.py
 
-      - name: Commit and push updated followers count
+      - name: Commit and Push Updated Followers
         run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git add followers_count.txt
-          git commit -m 'Updated followers count' || echo "No changes to commit"
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add followers.json
+          git commit -m "Updated followers count" || exit 0
           git push

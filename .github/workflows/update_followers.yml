@@ -29,7 +29,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
-          python-version: "3.x"
+          python-version: "3.11"
 
       - name: Install Dependencies
         run: pip install -r requirements.txt
@@ -42,5 +42,9 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add followers.json
-          git commit -m "Updated followers count" || exit 0
-          git push
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Updated followers count"
+            git push
+          fi

@@ -11,7 +11,9 @@ def get_followers():
     options = uc.ChromeOptions()
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
-    # options.add_argument("--headless")  # Uncomment this for GitHub Actions
+    options.add_argument("--headless")  # Important for GitHub Actions
+    options.add_argument("--disable-dev-shm-usage")  # Prevents memory issues
+    options.add_argument("--remote-debugging-port=9222")  # Required for headless mode
     options.add_argument("window-size=1920,1080")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36")
 
@@ -21,21 +23,12 @@ def get_followers():
     try:
         time.sleep(10)  # Increased sleep time for better reliability
 
-        # First try the og:description method
-        try:
-            followers_element = WebDriverWait(driver, 15).until(
-                EC.presence_of_element_located((By.XPATH, "//meta[@property='og:description']"))
-            )
-            followers_text = followers_element.get_attribute("content")
-            followers = followers_text.split()[0].replace(",", "")
-        except:
-            print("⚠️ og:description not found, trying an alternative method...")
-
-            # Alternative method: Look for followers directly on the page
-            followers_element = WebDriverWait(driver, 15).until(
-                EC.presence_of_element_located((By.XPATH, "//span[contains(text(), 'followers')]/preceding-sibling::span"))
-            )
-            followers = followers_element.text.replace(",", "")
+        # Try getting followers count
+        followers_element = WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.XPATH, "//meta[@property='og:description']"))
+        )
+        followers_text = followers_element.get_attribute("content")
+        followers = followers_text.split()[0].replace(",", "")
 
         print(f"👥 Followers: {followers}")
         return followers
@@ -49,7 +42,6 @@ def get_followers():
             driver.quit()
         except Exception as e:
             print("⚠️ Error closing WebDriver:", e)
-        del driver  # Ensure cleanup
 
 # Run the function
 get_followers()

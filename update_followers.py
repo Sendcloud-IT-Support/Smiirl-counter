@@ -29,7 +29,7 @@ def get_followers():
 
         # Use a more reliable XPath to locate the followers count
         followers_element = WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.XPATH, "//span[contains(@class, '_ac2a')]"))
+            EC.presence_of_element_located((By.XPATH, "//meta[@property='og:description']"))
         )
 
         followers = followers_element.text.replace(",", "").split()[0]

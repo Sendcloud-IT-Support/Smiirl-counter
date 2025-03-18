@@ -2,7 +2,7 @@ import requests
 import json
 from bs4 import BeautifulSoup
 
-INSTAGRAM_USERNAME = "your_instagram_username"
+INSTAGRAM_USERNAME = "lifeatsendcloud"
 URL = f"https://www.ninjalitics.com/{INSTAGRAM_USERNAME}"
 
 def get_followers():
